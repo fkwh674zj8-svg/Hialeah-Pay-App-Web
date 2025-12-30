@@ -1,1 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Hialeah Pay Calculator (Pure HTML)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --brand:#0E7490; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; color: var(--ink); background: var(--bg); }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 6px; color: var(--brand); font-size: 28px; }
+    p.lead { margin: 0 0 18px; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+    .col-6 { grid-column: span 6; } .col-12 { grid-column: span 12; }
+    label { display:block; font-size: 13px; color:#334155; margin: 6px 0 6px; }
+    select, input[type="number"], input[type="text"] {
+      width: 100%; padding: 8px 10px; border-radius: 8px; border:1px solid var(--line); background:#f8fafc;
+      font-size: 14px;
+    }
+    .check { display:flex; align-items:center; gap:8px; margin:6px 0; }
+    .row { display:flex; justify-content: space-between; padding:8px 10px; border:1px solid var(--line); border-radius:10px; margin:6px 0; }
+    .total { display:flex; justify-content: space-between; padding:10px 12px; font-weight:800; color:var(--brand); }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--line); color: #475569; font-size: 12px; }
+    hr { border:none; border-top:1px solid var(--line); margin: 10px 0; }
+    .footer { color:#64748b; font-size:12px; margin-top: 12px; }
+    .muted { color:#64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Hialeah Pay Calculator</h1>
+    <p class="lead">Calculate bi-weekly, hourly (80/96 hr), and annual pay per CBA-style rules. Pure HTML/JS.</p>
 
+    <div class="grid">
+      <div class="card col-6">
+        <label for="rank">Rank</label>
+        <select id="rank"></select>
+
+        <label for="step">Step</label>
+        <select id="step"></select>
+
+        <label for="lonStip">Longevity stipend (bi-weekly, $)</label>
+        <input id="lonStip" type="number" min="0" step="1" value="0" />
+
+        <div class="check"><input type="checkbox" id="dayAssign" /> <label for="dayAssign">Day Assignment (+6%)</label></div>
+        <div class="check"><input type="checkbox" id="lon10" /> <label for="lon10">10 years (+5% base)</label></div>
+        <div class="check"><input type="checkbox" id="lon15" /> <label for="lon15">15 years (+5% base)</label></div>
+        <div class="check"><input type="checkbox" id="lon20" /> <label for="lon20">20 years (+5% base)</label></div>
+
+        <hr />
+
+        <label for="ems">EMS Specialty</label>
+        <select id="ems">
+          <option value="0">None (0%)</option>
+          <option value="0.02">EMT (2%)</option>
+          <option value="0.06">EMT on ALS Engine (6%)</option>
+          <option value="0.07">EMT on ALS Transport (7%)</option>
+          <option value="0.08">Paramedic (8%)</option>
+          <option value="0.12">Paramedic on ALS Non-Transport (12%)</option>
+          <option value="0.16">Paramedic on ALS Transport (16%)</option>
+        </select>
+
+        <div class="check"><input type="checkbox" id="hazmat" /> <label for="hazmat">HazMat (+5%)</label></div>
+        <div class="check"><input type="checkbox" id="dive" /> <label for="dive">Dive (+3%)</label></div>
+        <div class="check"><input type="checkbox" id="fireMarshal" /> <label for="fireMarshal">Fire Marshal (+$80)</label></div>
+
+        <label for="eduCity">Education (City)</label>
+        <select id="eduCity">
+          <option value="0">None</option>
+          <option value="45">Associate ($45)</option>
+          <option value="90">Bachelor ($90)</option>
+        </select>
+
+        <label for="eduState">Education (State)</label>
+        <select id="eduState">
+          <option value="0">None</option>
+          <option value="50">Associate ($50)</option>
+          <option value="110">Bachelor ($110)</option>
+        </select>
+      </div>
+
+      <div class="card col-6">
+        <div class="row"><span>Base (Step)</span><span id="baseOut" class="muted">$0.00</span></div>
+        <div class="row"><span>Longevity bumps (sum of 5% each)</span><span id="lonBumpOut" class="muted">$0.00</span></div>
+        <div class="row"><span>Base with longevity</span><span id="baseLonOut" class="muted">$0.00</span></div>
+        <div class="row"><span>Day Assignment (+6% of base-with-lon)</span><span id="dayOut" class="muted">$0.00</span></div>
+        <div class="row"><span>EMS add (% of base-with-lon)</span><span id="emsOut" class="muted">$0.00</span></div>
+        <div class="row"><span>HazMat (+5% of base-with-lon)</span><span id="hazOut" class="muted">$0.00</span></div>
+        <div class="row"><span>Dive (+3% of base-with-lon)</span><span id="diveOut" class="muted">$0.00</span></div>
+        <div class="row"><span>Fire Marshal (flat)</span><span id="fmOut" class="muted">$0.00</span></div>
+        <div class="row"><span>Education (City + State)</span><span id="eduOut" class="muted">$0.00</span></div>
+        <div class="row"><span>Longevity stipend (flat)</span><span id="stipOut" class="muted">$0.00</span></div>
+
+        <hr />
+
+        <div class="total"><span>Bi-weekly Total</span><span id="totalOut">$0.00</span></div>
+        <div class="total"><span>Hourly (<span id="hoursOut" class="pill">80 hr</span>)</span><span id="hourlyOut">$0.00</span></div>
+        <div class="total"><span>Annual (×26)</span><span id="annualOut">$0.00</span></div>
+
+        <div class="footer">Hours auto-set: 80 hr when <strong>Day Assignment</strong> is on, otherwise 96 hr.</div>
+      </div>
+
+      <div class="card col-12">
+        <details>
+          <summary><strong>Preset tables used</strong> (FF Trainee, Firefighter, Driver, Lieutenant, Captain, DistrctChief)</summary>
+          <pre id="presetDump" style="white-space:pre-wrap;font-size:12px;line-height:1.45;margin:10px 0 0;"></pre>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const currency = n => (isFinite(n) ? n : 0).toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+
+    // Presets (mirrors your RN app)
+    const PAY_PRESETS = {
+      FFTrainee: [1729],
+      Firefighter: [2265, 2378, 2497, 2620, 2752, 2887, 3036, 3188, 3347, 3514, 3690],
+      Driver: [0,0,0,0, 2922, 3067, 3225, 3385, 3554, 3732, 3919],
+      Lieutenant: [0,0,0, 3158, 3317, 3480, 3656, 3839, 4031, 4233, 4445],
+      Captain: [0,0,0,0,0,0, 4208, 4419, 4640, 4872, 5116],
+      // keeping your original key spelling for compatibility:
+      DistrctChief: [0,0,0,0,0,0, 4491, 4717, 4953, 5201, 5461],
+    };
+
+    // --- DOM refs
+    const elRank = document.getElementById('rank');
+    const elStep = document.getElementById('step');
+    const elLonStip = document.getElementById('lonStip');
+    const elDay = document.getElementById('dayAssign');
+    const elLon10 = document.getElementById('lon10');
+    const elLon15 = document.getElementById('lon15');
+    const elLon20 = document.getElementById('lon20');
+
+    const elEMS = document.getElementById('ems');
+    const elHaz = document.getElementById('hazmat');
+    const elDive = document.getElementById('dive');
+    const elFM = document.getElementById('fireMarshal');
+    const elEduCity = document.getElementById('eduCity');
+    const elEduState = document.getElementById('eduState');
+
+    const baseOut = document.getElementById('baseOut');
+    const lonBumpOut = document.getElementById('lonBumpOut');
+    const baseLonOut = document.getElementById('baseLonOut');
+    const dayOut = document.getElementById('dayOut');
+    const emsOut = document.getElementById('emsOut');
+    const hazOut = document.getElementById('hazOut');
+    const diveOut = document.getElementById('diveOut');
+    const fmOut = document.getElementById('fmOut');
+    const eduOut = document.getElementById('eduOut');
+    const stipOut = document.getElementById('stipOut');
+    const totalOut = document.getElementById('totalOut');
+    const hourlyOut = document.getElementById('hourlyOut');
+    const annualOut = document.getElementById('annualOut');
+    const hoursOut = document.getElementById('hoursOut');
+
+    const presetDump = document.getElementById('presetDump');
+
+    // populate rank select
+    Object.keys(PAY_PRESETS).forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      elRank.appendChild(opt);
+    });
+
+    function populateSteps() {
+      const rank = elRank.value;
+      const steps = PAY_PRESETS[rank] || [];
+      elStep.innerHTML = '';
+      steps.forEach((val, idx) => {
+        const s = idx + 1;
+        const op = document.createElement('option');
+        op.value = String(s);
+        op.textContent = `Step ${s} (${currency(val)})`;
+        elStep.appendChild(op);
+      });
+    }
+
+    function calc() {
+      const rank = elRank.value;
+      const stepIndex = Math.max(0, (parseInt(elStep.value || '1', 10) - 1));
+      const base = (PAY_PRESETS[rank] || [0])[stepIndex] || 0;
+
+      const bumps = (elLon10.checked ? 0.05 : 0) + (elLon15.checked ? 0.05 : 0) + (elLon20.checked ? 0.05 : 0);
+      const baseWithLon = base * (1 + bumps);
+
+      const dayAdd = elDay.checked ? baseWithLon * 0.06 : 0;
+
+      const emsRate = parseFloat(elEMS.value || '0') || 0;
+      const emsAdd = baseWithLon * emsRate;
+
+      const hazAdd = elHaz.checked ? baseWithLon * 0.05 : 0;
+      const diveAdd = elDive.checked ? baseWithLon * 0.03 : 0;
+      const fmAdd = elFM.checked ? 80 : 0;
+
+      const eduCity = parseFloat(elEduCity.value || '0') || 0;
+      const eduState = parseFloat(elEduState.value || '0') || 0;
+
+      const lonStip = parseFloat(elLonStip.value || '0') || 0;
+
+      const biweekly = baseWithLon + dayAdd + emsAdd + hazAdd + diveAdd + fmAdd + eduCity + eduState + lonStip;
+      const hours = elDay.checked ? 80 : 96;
+      const hourly = biweekly / hours;
+      const annual = biweekly * 26;
+
+      baseOut.textContent = currency(base);
+      lonBumpOut.textContent = currency(baseWithLon - base);
+      baseLonOut.textContent = currency(baseWithLon);
+      dayOut.textContent = currency(dayAdd);
+      emsOut.textContent = currency(emsAdd);
+      hazOut.textContent = currency(hazAdd);
+      diveOut.textContent = currency(diveAdd);
+      fmOut.textContent = currency(fmAdd);
+      eduOut.textContent = currency(eduCity + eduState);
+      stipOut.textContent = currency(lonStip);
+      totalOut.textContent = currency(biweekly);
+      hourlyOut.textContent = currency(hourly);
+      annualOut.textContent = currency(annual);
+      hoursOut.textContent = (hours + ' hr');
+    }
+
+    function dumpPresets() {
+      const lines = [];
+      for (const [k, arr] of Object.entries(PAY_PRESETS)) {
+        lines.push(k + ': [' + arr.join(', ') + ']');
+      }
+      presetDump.textContent = lines.join('\n');
+    }
+
+    // initial UI
+    elRank.value = 'Firefighter';
+    populateSteps();
+    elStep.value = '1';
+    dumpPresets();
+    calc();
+
+    // listeners
+    [elRank].forEach(el => el.addEventListener('change', () => { populateSteps(); calc(); }));
+    [elStep, elLonStip, elEMS, elEduCity, elEduState].forEach(el => el.addEventListener('input', calc));
+    [elDay, elLon10, elLon15, elLon20, elHaz, elDive, elFM].forEach(el => el.addEventListener('change', calc));
+  </script>
+</body>
+</html>
